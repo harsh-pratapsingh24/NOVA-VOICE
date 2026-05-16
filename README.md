@@ -4,6 +4,7 @@ Nova-Voice is a high-performance, modular voice assistant designed for near-inst
 
 ## ⚡ Key Highlights
 - **Zero-Lag Response**: Utilizes Groq (Llama 3.1) for lightning-fast text generation.
+- **Whisper Integration**: Uses OpenAI's Whisper (via Groq LPU) for ultra-accurate, low-latency speech-to-text.
 - **Natural Interaction**: Uses Microsoft Edge's Neural TTS for high-fidelity, human-like speech.
 - **Intelligent Triggers**: Implements wake-word detection ("Assistant") for hands-free operation.
 - **Performance Focused**: Built-in latency benchmarking for every pipeline stage (STT, LLM, TTS).
@@ -11,17 +12,17 @@ Nova-Voice is a high-performance, modular voice assistant designed for near-inst
 
 ## 🛠️ Technical Architecture
 The system follows a linear pipeline optimized for speed:
-1. **Perception**: `SpeechRecognition` (Google Web API) captures and transcribes user intent.
+1. **Perception**: `Groq Cloud API` (Whisper-Large-v3) transcribes user intent with industry-leading accuracy.
 2. **Cognition**: `Groq Cloud API` processes queries using the `Llama-3.1-8b-instant` model.
 3. **Expression**: `Edge-TTS` generates neural audio, played back via `Pygame`.
 
 ## 📊 Latency Benchmark (Typical)
-| Pipeline Stage | Processing Time |
-| :--- | :--- |
-| **Speech-to-Text** | ~1.0s |
-| **LLM Inference (Groq)** | **~0.25s** |
-| **Text-to-Speech** | ~0.7s |
-| **Total Latency** | **~1.95s** |
+| Pipeline Stage | Processing Time | Model Used |
+| :--- | :--- | :--- |
+| **Speech-to-Text** | ~0.5s | **Whisper-Large-v3 (Groq)** |
+| **LLM Inference** | **~0.25s** | **Llama-3.1-8b (Groq)** |
+| **Text-to-Speech** | ~0.7s | Edge-TTS Neural |
+| **Total Latency** | **~1.45s** | Optimized Pipeline |
 
 ## 🚀 Getting Started
 

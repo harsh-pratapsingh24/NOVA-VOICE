@@ -15,7 +15,8 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # Configuration
 WAKE_WORD = "assistant"
-MODEL = "llama-3.1-8b-instant"
+LLM_MODEL = "llama-3.1-8b-instant"
+STT_MODEL = "whisper-large-v3"
 TEMP_AUDIO_FILE = "response.mp3"
 
 # Initialize Pygame mixer for audio playback
@@ -54,22 +55,37 @@ def get_llm_response(query):
                 "content": query,
             }
         ],
-        model=MODEL,
+        model=LLM_MODEL,
     )
     llm_latency = time.time() - start_time
     return chat_completion.choices[0].message.content, llm_latency
 
+def transcribe_audio(audio_data):
+    """Transcribes audio using Groq's Whisper model."""
+    try:
+        # Convert audio data to WAV format in memory
+        wav_data = audio_data.get_wav_data()
+        
+        # Call Groq Whisper API
+        transcription = client.audio.transcriptions.create(
+            file=("speech.wav", wav_data),
+            model=STT_MODEL,
+            response_format="text",
+        )
+        return transcription.strip().lower()
+    except Exception as e:
+        print(f"STT Error: {e}")
+        return ""
+
 def listen_for_wake_word(recognizer, source):
-    """Listens for the wake word."""
+    """Listens for the wake word using Whisper."""
     print(f"Listening for wake word '{WAKE_WORD}'...")
     audio = recognizer.listen(source)
-    try:
-        text = recognizer.recognize_google(audio).lower()
+    text = transcribe_audio(audio)
+    if text:
         print(f"Heard: {text}")
         if WAKE_WORD in text:
             return True
-    except Exception:
-        pass
     return False
 
 def get_user_query(recognizer, source):
@@ -77,16 +93,16 @@ def get_user_query(recognizer, source):
     print("Listening for your query...")
     start_time = time.time()
     audio = recognizer.listen(source)
-    stt_latency = time.time() - start_time
     
-    try:
-        start_transcribe = time.time()
-        query = recognizer.recognize_google(audio)
-        stt_latency += (time.time() - start_transcribe)
+    start_transcribe = time.time()
+    query = transcribe_audio(audio)
+    stt_latency = time.time() - start_time # Includes listening and transcription
+    
+    if query:
         print(f"User Query: {query}")
         return query, stt_latency
-    except Exception as e:
-        print(f"Could not understand audio: {e}")
+    else:
+        print("Could not understand audio.")
         return None, stt_latency
 
 async def main():
